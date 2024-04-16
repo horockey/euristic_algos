@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"slices"
 	"time"
 
 	"github.com/horockey/euristic_algos/internal/model"
@@ -28,10 +29,10 @@ func main() {
 		tasksCount     int     = 11  // Кол-во задач
 		loadMin        int     = 10  // Минимум нагрузки задачи
 		loadMax        int     = 23  // Максимум нагрузки задачи
-		repeatsToBreak int     = 11  // Кол-во повторов для останова
-		membersCount   int     = 11  // Кол-во особей в поколении
-		crossoverProba float32 = 0.8 // Вероятность кроссовера
-		mutationProba  float32 = 0.8 // Вероятнотсь мутации
+		repeatsToBreak int     = 5   // Кол-во повторов для останова
+		membersCount   int     = 5   // Кол-во особей в поколении
+		crossoverProba float32 = 1.0 // Вероятность кроссовера
+		mutationProba  float32 = 1.0 // Вероятнотсь мутации
 	)
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -60,13 +61,10 @@ func main() {
 	bestResultRepeats := 1
 
 	for k := 1; bestResultRepeats < repeatsToBreak; k++ {
-		g := model.NewGeneration(
-			membersCount,
-			tasks,
-			fmt.Sprintf("gen_%d", k),
-		)
+		buffer := make([]*model.Member, 0, 2*membersCount)
+		buffer = append(buffer, g0.Members...)
 
-		for i, member := range g0.Members {
+		for _, member := range g0.Members {
 			isCrossover := rnd.Float32() < crossoverProba
 			isMutation := rnd.Float32() < mutationProba
 
@@ -100,8 +98,19 @@ func main() {
 				}
 			}
 
-			g.Members[i] = bestCandidate
+			buffer = append(buffer, bestCandidate)
 		}
+
+		slices.SortFunc(buffer, func(a *model.Member, b *model.Member) int {
+			return b.Fenotype().Det() - a.Fenotype().Det()
+		})
+
+		g := model.NewGeneration(
+			membersCount,
+			tasks,
+			fmt.Sprintf("gen_%d", k),
+		)
+		// TODO: fill up
 
 		fmt.Printf("%s\nBest fenotype (%s):\n%s\n",
 			g.String(),
