@@ -14,14 +14,12 @@ type Generation struct {
 
 func NewGeneration(
 	membersCount int,
-	memberSize int,
-	procCount int,
-	T1, T2 int,
+	tasks [][]int,
 	genName string,
 ) *Generation {
-	loads := make([]int, 0, memberSize)
-	for i := 0; i < memberSize; i++ {
-		loads = append(loads, rnd.Intn(T2-T1)+T1)
+	loads := make([]int, 0, len(tasks[0]))
+	for i := 0; i < len(tasks[0]); i++ {
+		loads = append(loads, tasks[rnd.Intn(len(tasks))][i])
 	}
 
 	mems := make([]*Member, 0, membersCount)
@@ -29,7 +27,7 @@ func NewGeneration(
 		mems = append(mems,
 			NewMember(
 				loads,
-				procCount,
+				len(tasks),
 				fmt.Sprintf("O%d", i),
 			))
 	}

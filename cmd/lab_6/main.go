@@ -9,12 +9,13 @@ import (
 )
 
 /*
-	Модифицированный алгоритм Голдберга.
+	Модифицированный алгоритм Холланда.
+	0. Матрица нагрузки неоднородная!
 	1. Берем i-ю особь из поколения
-	2. Определяем, будет ли одноточечный кроссовер (Pk)
+	2. Определяем, будет ли двухточечный кроссовер (Pk)
 		2.1. Если кроссовер - скрещиваем со случайной особью из текущего поколения
-	3. Определяем, будет ли одноточечная мутация
-		3.1. Если мутация - определяем ген и бит в его ключе, инвертируем
+	3. Определяем, будет ли двухточечная мутация
+		3.1. Если мутация - определяем ген и 2 бита в его ключе, меняем их местами
 		3.2. Возможно будет смена держателя процесса
 	4. i-й слот будущего поколения разыгрывается между Oi и его потомками (если есть)
 */
@@ -37,9 +38,8 @@ func main() {
 	tasks = make([][]int, procCount)
 	for i := 0; i < len(tasks); i++ {
 		tasks[i] = make([]int, tasksCount)
-		val := rand.Intn(loadMax-loadMin) + loadMin
 		for j := 0; j < len(tasks[i]); j++ {
-			tasks[i][j] = val
+			tasks[i][j] = rand.Intn(loadMax-loadMin) + loadMin
 		}
 	}
 
@@ -83,13 +83,13 @@ func main() {
 					}
 				}
 
-				l, r := member.SinglePointCrossover(g0.Members[partnerIdx])
+				l, r := member.TwoPointCrossover(g0.Members[partnerIdx])
 				candidates = append(candidates, l)
 				candidates = append(candidates, r)
 			}
 
 			if isMutation {
-				candidates = append(candidates, member.SinglePointMutation())
+				candidates = append(candidates, member.TwoPointMutaion())
 			}
 
 			var bestCandidate *model.Member
