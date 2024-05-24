@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/samber/lo"
@@ -13,16 +14,19 @@ type Member struct {
 	procCount int
 }
 
-func NewMember(loads []int, procCount int, name string) *Member {
-	gt := make([]*Gen, 0, len(loads))
-	for i := 0; i < len(loads); i++ {
-		gt = append(gt, NewGen(loads[i], procCount))
+func NewMember(tasks []*Task, name string) *Member {
+	gt := make([]*Gen, 0, len(tasks))
+	ts := slices.Clone(tasks)
+	for i := 0; i < len(tasks); i++ {
+		idx := rnd.Intn(len(ts))
+		gt = append(gt, NewGen(ts[idx], len(tasks[0].Cost)))
+		ts = append(ts[:idx], ts[idx+1:]...)
 	}
 
 	return &Member{
 		Genotype:  gt,
 		Name:      name,
-		procCount: procCount,
+		procCount: len(tasks[0].Cost),
 	}
 }
 
@@ -35,7 +39,7 @@ func (m *Member) SinglePointMutation() *Member {
 
 	for _, gen := range m.Genotype {
 		g := &Gen{
-			Load:      gen.Load,
+			Task:      gen.Task,
 			Key:       gen.Key,
 			procCount: m.procCount,
 		}
@@ -57,7 +61,7 @@ func (m *Member) TwoPointMutaion() *Member {
 
 	for _, gen := range m.Genotype {
 		g := &Gen{
-			Load:      gen.Load,
+			Task:      gen.Task,
 			Key:       gen.Key,
 			procCount: m.procCount,
 		}
@@ -138,15 +142,15 @@ func (m *Member) TwoPointCrossover(partner *Member) (left *Member, right *Member
 }
 
 func (m *Member) Fenotype() Fenotype {
-	ft := make([][]int, m.procCount)
+	ft := make([][]*Gen, m.procCount)
 	for i := 0; i < m.procCount; i++ {
-		ft[i] = make([]int, 0, len(m.Genotype))
+		ft[i] = make([]*Gen, 0, len(m.Genotype))
 	}
 
 	for i := 0; i < len(m.Genotype); i++ {
-		ft[m.Genotype[i].ProcNum()] = append(
-			ft[m.Genotype[i].ProcNum()],
-			m.Genotype[i].Load,
+		ft[m.Genotype[i].ProcIdx()] = append(
+			ft[m.Genotype[i].ProcIdx()],
+			m.Genotype[i],
 		)
 	}
 

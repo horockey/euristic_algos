@@ -19,7 +19,7 @@ import (
 	4. i-й слот будущего поколения разыгрывается между Oi и его потомками (если есть)
 */
 
-var tasks [][]int
+var tasks []*model.Task
 
 func main() {
 	var (
@@ -34,13 +34,14 @@ func main() {
 	)
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	tasks = make([][]int, procCount)
+	tasks = make([]*model.Task, procCount)
 	for i := 0; i < len(tasks); i++ {
-		tasks[i] = make([]int, tasksCount)
+		temp := make([]int, tasksCount)
 		val := rand.Intn(loadMax-loadMin) + loadMin
-		for j := 0; j < len(tasks[i]); j++ {
-			tasks[i][j] = val
+		for j := 0; j < tasksCount; j++ {
+			temp[j] = val
 		}
+		tasks = append(tasks, model.NewTask(fmt.Sprintf("%d", i+1), temp))
 	}
 
 	fmt.Println()

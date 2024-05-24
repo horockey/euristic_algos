@@ -18,10 +18,10 @@ import (
 	3. Определяем, будет ли двухточечная мутация
 		3.1. Если мутация - определяем ген и 2 бита в его ключе, меняем их местами
 		3.2. Возможно будет смена держателя процесса
-	4. i-й слот будущего поколения разыгрывается между Oi и его потомками (если есть)
+	4. Все z мест в новом поколении занимают лучшие особи текущего. С учетом мутантов и кроссоверов
 */
 
-var tasks [][]int
+var tasks []*model.Task
 
 func main() {
 	var (
@@ -36,12 +36,23 @@ func main() {
 	)
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	tasks = make([][]int, procCount)
-	for i := 0; i < len(tasks); i++ {
-		tasks[i] = make([]int, tasksCount)
-		for j := 0; j < len(tasks[i]); j++ {
-			tasks[i][j] = rand.Intn(loadMax-loadMin) + loadMin
+	fmt.Println("Tasks:")
+	fmt.Printf("%8s", "T/P")
+	for i := 0; i < procCount; i++ {
+		fmt.Printf("%5s", fmt.Sprintf("P%d", i+1))
+	}
+	fmt.Println()
+
+	tasks = make([]*model.Task, 0, tasksCount)
+	for i := 0; i < tasksCount; i++ {
+		fmt.Printf("%5s\t", fmt.Sprintf("T%d", i+1))
+		temp := make([]int, procCount)
+		for j := 0; j < procCount; j++ {
+			temp[j] = rand.Intn(loadMax-loadMin) + loadMin
+			fmt.Printf("%5d", temp[j])
 		}
+		tasks = append(tasks, model.NewTask(fmt.Sprintf("T%d", i+1), temp))
+		fmt.Println()
 	}
 
 	fmt.Println()
@@ -68,9 +79,6 @@ func main() {
 			isCrossover := rnd.Float32() < crossoverProba
 			isMutation := rnd.Float32() < mutationProba
 
-			candidates := make([]*model.Member, 0, 4)
-			candidates = append(candidates, member)
-
 			if isCrossover {
 				partnerIdx := rnd.Intn(len(g0.Members))
 				if g0.Members[partnerIdx] == member {
@@ -82,27 +90,18 @@ func main() {
 				}
 
 				l, r := member.TwoPointCrossover(g0.Members[partnerIdx])
-				candidates = append(candidates, l)
-				candidates = append(candidates, r)
+				buffer = append(buffer, l)
+				buffer = append(buffer, r)
 			}
 
 			if isMutation {
-				candidates = append(candidates, member.TwoPointMutaion())
+				buffer = append(buffer, member.TwoPointMutaion())
 			}
 
-			var bestCandidate *model.Member
-			for _, candidate := range candidates {
-				if bestCandidate == nil ||
-					candidate.Fenotype().Det() < bestCandidate.Fenotype().Det() {
-					bestCandidate = candidate
-				}
-			}
-
-			buffer = append(buffer, bestCandidate)
 		}
 
 		slices.SortFunc(buffer, func(a *model.Member, b *model.Member) int {
-			return b.Fenotype().Det() - a.Fenotype().Det()
+			return a.Fenotype().Det() - b.Fenotype().Det()
 		})
 
 		g := model.NewGeneration(
@@ -110,7 +109,10 @@ func main() {
 			tasks,
 			fmt.Sprintf("gen_%d", k),
 		)
-		// TODO: fill up
+
+		for i := 0; i < membersCount; i++ {
+			g.Members[i] = buffer[i]
+		}
 
 		fmt.Printf("%s\nBest fenotype (%s):\n%s\n",
 			g.String(),
