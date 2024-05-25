@@ -23,7 +23,7 @@ func main() {
 	fmt.Println("Graph:")
 	fmt.Println(g.String())
 
-	fmt.Println("Greedya algo:")
+	fmt.Println("Greedy algo:")
 	greedySol, err := greedyAlgo(g, 0)
 	if err != nil {
 		panic(err)

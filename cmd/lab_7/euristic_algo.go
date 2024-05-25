@@ -7,7 +7,6 @@ import (
 	"time"
 
 	model "github.com/horockey/euristic_algos/internal/model/lab_7"
-	"github.com/samber/lo"
 )
 
 func euristicAlgo(
@@ -31,8 +30,10 @@ func euristicAlgo(
 	fmt.Printf("%s\nBest member: %s\n\n", g0.String(), g0.BestMember().String())
 
 	for iteration := 0; bestResultRepeatedCount < repeatsToBreak; iteration++ {
-		buffer := make([]*model.Member, 0, membersCount*3)
+
+		buffer := make([]*model.Member, 0, membersCount*4)
 		buffer = append(buffer, g0.Members...)
+
 		for _, member := range g0.Members {
 			isCrosover := rnd.Float32() < crossoverProba
 			isMutation := rnd.Float32() < mutationProba
@@ -49,7 +50,7 @@ func euristicAlgo(
 					i2 = rand.Intn(memberSize)
 				}
 
-				l, r, err := member.Crossover(partner, i1, i2, g, s0)
+				l, r, err := member.TwoPointCrossover(partner, i1, i2, g, s0)
 				if err != nil {
 					return nil, fmt.Errorf("crossingover: %w", err)
 				}
@@ -73,23 +74,45 @@ func euristicAlgo(
 			}
 		}
 
-		buffer = lo.Filter(buffer, func(member *model.Member, _ int) bool {
-			visited := map[int]struct{}{}
+		uniqNames := map[string]struct{}{}
+		buffer = slices.DeleteFunc(buffer, func(member *model.Member) bool {
+			if _, found := uniqNames[member.Name]; found {
+				return true
+			}
+			uniqNames[member.Name] = struct{}{}
+
+			visitedTo := map[int]struct{}{}
+			visitedFrom := map[int]struct{}{}
+
 			for _, tr := range member.Genotype {
-				if _, found := visited[tr.To]; found {
-					return false
+				if _, found := visitedTo[tr.To]; found {
+					return true
 				}
-				visited[tr.To] = struct{}{}
+				visitedTo[tr.To] = struct{}{}
+
+				if _, found := visitedFrom[tr.From]; found {
+					return true
+				}
+				visitedFrom[tr.From] = struct{}{}
+
 				if tr.Weight == 0 {
-					return false
+					return true
+				}
+
+				if tr.From == tr.To {
+					return true
 				}
 			}
-			return true
+			return false
 		})
 
 		slices.SortFunc(buffer, func(a, b *model.Member) int {
 			return a.Genotype.Total() - b.Genotype.Total()
 		})
+
+		if len(buffer) < membersCount {
+			panic("buffer is to small")
+		}
 
 		gn := model.Generation{
 			Name:    "g" + fmt.Sprint(iteration+1),
