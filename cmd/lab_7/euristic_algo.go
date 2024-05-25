@@ -80,6 +80,9 @@ func euristicAlgo(
 					return false
 				}
 				visited[tr.To] = struct{}{}
+				if tr.Weight == 0 {
+					return false
+				}
 			}
 			return true
 		})
