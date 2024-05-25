@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/horockey/euristic_algos/internal/model"
+	model "github.com/horockey/euristic_algos/internal/model/lab_6"
 )
 
 /*

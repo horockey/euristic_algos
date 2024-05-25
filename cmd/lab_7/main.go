@@ -5,29 +5,46 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/horockey/euristic_algos/internal/model"
+	model "github.com/horockey/euristic_algos/internal/model/lab_7"
 )
 
 func main() {
 	const (
-		nodesCount int = 5  // Количество вершин графа
-		weightMin  int = 12 // Минимальный вес дуги
-		weightMax  int = 28 // Максимальный вес дуги
+		nodesCount     int     = 5   // Количество вершин графа
+		weightMin      int     = 12  // Минимальный вес дуги
+		weightMax      int     = 28  // Максимальный вес дуги
+		membersCount   int     = 10  // Количество особей в поколении
+		repeatsToBreak int     = 10  // Количетсво повторений для завершения
+		crossoverProba float32 = 1.0 // Вероятность кроссовера
+		mutationProba  float32 = 1.0 // Вероятность мутации
 	)
 
 	g := model.NewGraph(nodesCount, weightMin, weightMax)
 	fmt.Println("Graph:")
 	fmt.Println(g.String())
 
-	fmt.Println("GreedyAlgo:")
+	fmt.Println("Greedya algo:")
 	greedySol, err := greedyAlgo(g, 0)
 	if err != nil {
 		panic(err)
 	}
-
 	fmt.Println(greedySol.String())
 
-	if err := writeSolutionsToPuml("solution.puml", g, greedySol, nil); err != nil {
+	fmt.Println("Euristic algo:")
+	euristicSol, err := euristicAlgo(
+		g,
+		0,
+		membersCount,
+		nodesCount,
+		repeatsToBreak,
+		crossoverProba,
+		mutationProba,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := writeSolutionsToPuml("solution.puml", g, greedySol, euristicSol); err != nil {
 		panic(err)
 	}
 }

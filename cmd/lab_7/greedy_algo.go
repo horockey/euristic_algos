@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/horockey/euristic_algos/internal/model"
+	model "github.com/horockey/euristic_algos/internal/model/lab_7"
 )
 
 func greedyAlgo(g *model.Graph, s0 int) (solution model.Path, resErr error) {

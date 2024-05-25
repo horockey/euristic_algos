@@ -1,6 +1,8 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Path []*Transition
 
@@ -20,6 +22,8 @@ func (p Path) String() string {
 		res += fmt.Sprintf(" -(%d)-> %d", p[i].Weight, p[i].To)
 	}
 
+	res += fmt.Sprintf(" (total: %d)", p.Total())
+
 	return res
 }
 
@@ -30,12 +34,20 @@ func (p Path) PumlString(color string) string {
 
 	res := fmt.Sprintf("(%d) #gray\n", p[0].From)
 	for _, tr := range p {
-		res += fmt.Sprintf("(%d) -[#%s]-> (%d): %d\n",
+		res += fmt.Sprintf("(%d) -[#%s]-> (%d)\n",
 			tr.From,
 			color,
 			tr.To,
-			tr.Weight,
 		)
+	}
+
+	return res
+}
+
+func (p Path) Total() int {
+	res := 0
+	for _, tr := range p {
+		res += tr.Weight
 	}
 
 	return res
