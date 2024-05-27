@@ -1,6 +1,6 @@
 module github.com/horockey/euristic_algos
 
-go 1.21.1
+go 1.22.2
 
 require github.com/samber/lo v1.39.0
 

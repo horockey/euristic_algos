@@ -5,19 +5,21 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/horockey/euristic_algos/internal/lab_5/model"
+	model "github.com/horockey/euristic_algos/internal/model/lab_6"
 )
 
 /*
 	Модифицированный алгоритм Голдберга.
 	1. Берем i-ю особь из поколения
-	2. Определяем, будет ли кроссовер (Pk)
+	2. Определяем, будет ли одноточечный кроссовер (Pk)
 		2.1. Если кроссовер - скрещиваем со случайной особью из текущего поколения
-	3. Определяем, будет ли мутация
+	3. Определяем, будет ли одноточечная мутация
 		3.1. Если мутация - определяем ген и бит в его ключе, инвертируем
 		3.2. Возможно будет смена держателя процесса
 	4. i-й слот будущего поколения разыгрывается между Oi и его потомками (если есть)
 */
+
+var tasks []*model.Task
 
 func main() {
 	var (
@@ -32,13 +34,20 @@ func main() {
 	)
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 
+	tasks = make([]*model.Task, procCount)
+	for i := 0; i < len(tasks); i++ {
+		temp := make([]int, tasksCount)
+		val := rand.Intn(loadMax-loadMin) + loadMin
+		for j := 0; j < tasksCount; j++ {
+			temp[j] = val
+		}
+		tasks = append(tasks, model.NewTask(fmt.Sprintf("%d", i+1), temp))
+	}
+
 	fmt.Println()
 	g0 := model.NewGeneration(
 		membersCount,
-		tasksCount,
-		procCount,
-		loadMin,
-		loadMax,
+		tasks,
 		"gen_0",
 	)
 
@@ -54,10 +63,7 @@ func main() {
 	for k := 1; bestResultRepeats < repeatsToBreak; k++ {
 		g := model.NewGeneration(
 			membersCount,
-			tasksCount,
-			procCount,
-			loadMin,
-			loadMax,
+			tasks,
 			fmt.Sprintf("gen_%d", k),
 		)
 
@@ -78,13 +84,13 @@ func main() {
 					}
 				}
 
-				l, r := member.Crossover(g0.Members[partnerIdx])
+				l, r := member.SinglePointCrossover(g0.Members[partnerIdx])
 				candidates = append(candidates, l)
 				candidates = append(candidates, r)
 			}
 
 			if isMutation {
-				candidates = append(candidates, member.Mutate())
+				candidates = append(candidates, member.SinglePointMutation())
 			}
 
 			var bestCandidate *model.Member
