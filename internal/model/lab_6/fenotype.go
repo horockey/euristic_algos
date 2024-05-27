@@ -14,7 +14,11 @@ func (f Fenotype) String() string {
 	for row := 0; row < len(f); row++ {
 		res += fmt.Sprintf("P%d: ", row+1)
 		for col := 0; col < len(f[row]); col++ {
-			res += fmt.Sprintf("%s(%d) ", f[row][col].Task.Name, f[row][col].Cost())
+			cost := fmt.Sprintf("%d", f[row][col].Cost())
+			if f[row][col].Cost() == math.MaxInt {
+				cost = "∞"
+			}
+			res += fmt.Sprintf("%s(%s) ", f[row][col].Task.Name, cost)
 		}
 		res += fmt.Sprintf(" (sum: %d)\n", lo.SumBy(f[row], func(g *Gen) int { return g.Cost() }))
 	}

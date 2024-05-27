@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"math"
 )
 
 type Gen struct {
@@ -26,16 +27,28 @@ func NewGen(task *Task, procCount int) *Gen {
 		procCount: procCount,
 	}
 
+	for g.Task.Cost[g.ProcIdx()] == math.MaxInt {
+		g.Key = Key(rnd.Intn(256))
+	}
+
 	return &g
 }
 
 func (g *Gen) SinglePointMutation() (bit int, changedProcNum bool) {
 	oldProcNum := g.ProcIdx()
 
-	bit = rnd.Intn(8)
-	g.Key = g.Key ^ (1 << (bit))
+	for i := 0; i < 3; i++ {
+		old := g.Key
+		bit = rnd.Intn(8)
+		g.Key = g.Key ^ (1 << (bit))
 
-	return bit, oldProcNum == g.ProcIdx()
+		if g.Task.Cost[g.ProcIdx()] < math.MaxInt {
+			return bit, oldProcNum == g.ProcIdx()
+		}
+		g.Key = old
+	}
+
+	return -1, true
 }
 
 func (g *Gen) TwoPointMutation() (leftBit int, rightBit int, changedProcNum bool) {
@@ -66,7 +79,11 @@ func (g *Gen) TwoPointMutation() (leftBit int, rightBit int, changedProcNum bool
 }
 
 func (g *Gen) String() string {
-	return fmt.Sprintf("%s(%d)->%d", g.Task.Name, g.Task.Cost[g.ProcIdx()], g.Key)
+	cost := fmt.Sprintf("%d", g.Task.Cost[g.ProcIdx()])
+	if g.Task.Cost[g.ProcIdx()] == math.MaxInt {
+		cost = "∞"
+	}
+	return fmt.Sprintf("%s(%s)->%d", g.Task.Name, cost, g.Key)
 }
 
 func (g *Gen) Cost() int {

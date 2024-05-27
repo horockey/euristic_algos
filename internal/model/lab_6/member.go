@@ -2,6 +2,8 @@ package model
 
 import (
 	"fmt"
+	"log"
+	"math"
 	"slices"
 	"strings"
 
@@ -47,6 +49,10 @@ func (m *Member) SinglePointMutation() *Member {
 	}
 
 	bit, _ := res.Genotype[rnd.Intn(len(res.Genotype))].SinglePointMutation()
+	if bit < 0 {
+		log.Printf("mutation failed 3 times for %s\n", m.Name)
+		return m
+	}
 	res.Name += fmt.Sprint(bit)
 
 	return res
@@ -95,6 +101,20 @@ func (m *Member) SinglePointCrossover(partner *Member) (left *Member, right *Mem
 	for i := split; i < len(m.Genotype); i++ {
 		left.Genotype[i] = partner.Genotype[i]
 		right.Genotype[i] = m.Genotype[i]
+	}
+
+	for _, g := range m.Genotype {
+		if g.Cost() == math.MaxInt {
+			left = m
+			break
+		}
+	}
+
+	for _, g := range partner.Genotype {
+		if g.Cost() == math.MaxInt {
+			right = partner
+			break
+		}
 	}
 
 	return
